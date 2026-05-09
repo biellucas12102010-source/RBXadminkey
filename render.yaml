@@ -1,0 +1,21 @@
+# render.yaml — Configuração do serviço no Render.com
+services:
+  - type: web
+    name: rbx-key-system
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/validate?key=ping
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false          # você preenche no painel do Render
+      - key: REDUX_ADMIN_TOKEN
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESET_FROM_EMAIL
+        sync: false
+      - key: APP_NAME
+        sync: false

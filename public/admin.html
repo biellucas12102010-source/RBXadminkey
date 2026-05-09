@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RBX Key System — Admin Panel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap');
+
+:root {
+  --bg0:#000000;--bg1:#0a0a0a;--bg2:#111111;--bg3:#1a1a1a;
+  --red:#CC2233;--red2:#FF2244;--red3:#FF4466;
+  --gold:#DDAA33;--gold2:#FFCC55;
+  --green:#22BB66;--green2:#44FF88;
+  --blue:#2233CC;--blue2:#4455FF;
+  --purple:#9944FF;
+  --border:#1a1a1a;--border2:#2a2a2a;--border3:#3a1020;
+  --text:#E0D0D5;--text2:#886677;--text3:#3a2530;
+  --mono:'Share Tech Mono',monospace;
+  --head:'Orbitron',sans-serif;
+  --body:'Rajdhani',sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:var(--bg0);color:var(--text);font-family:var(--body);font-size:15px;overflow-x:hidden}
+
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(204,34,51,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(204,34,51,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(180,20,40,0.08),transparent 70%);
+  pointer-events:none;z-index:0}
+
+#loginScreen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.97)}
+.login-card{width:400px;border:1px solid #2a0a10;border-radius:16px;background:linear-gradient(160deg,#0f0505,#080202);padding:40px 36px;position:relative;overflow:hidden}
+.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red2),var(--red3),transparent)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo h1{font-family:var(--head);font-size:32px;font-weight:900;background:linear-gradient(90deg,var(--red2),var(--red3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:5px}
+.login-logo p{font-size:12px;color:var(--text2);margin-top:4px;letter-spacing:2px;font-family:var(--mono)}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:11px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;font-family:var(--mono)}
+.form-group input{width:100%;background:#0a0202;border:1px solid #2a0a10;border-radius:8px;color:white;padding:11px 14px;font-size:14px;font-family:var(--mono);outline:none;transition:border-color .2s}
+.form-group input:focus{border-color:var(--red2)}
+.btn-login{width:100%;padding:12px;border:none;border-radius:8px;cursor:pointer;font-family:var(--head);font-size:14px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,var(--red),var(--red2));color:white;transition:opacity .2s,transform .1s;margin-top:6px}
+.btn-login:hover{opacity:.88}.btn-login:active{transform:scale(.98)}
+.login-err{color:var(--red3);font-size:12px;font-family:var(--mono);margin-top:10px;text-align:center;min-height:18px}
+
+#app{display:none;min-height:100vh;position:relative;z-index:1}
+
+.topbar{height:56px;background:linear-gradient(180deg,#0f0404,#080101);border-bottom:1px solid #1a0508;display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:100}
+.topbar-logo{font-family:var(--head);font-size:20px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--red2),var(--red3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-sub{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:1px}
+.topbar-spacer{flex:1}
+.topbar-badge{font-size:10px;padding:4px 10px;border-radius:4px;font-family:var(--mono);background:rgba(204,34,51,.15);border:1px solid rgba(204,34,51,.3);color:var(--red3)}
+.btn-logout{background:rgba(20,20,20,.8);border:1px solid #2a0a10;color:var(--text2);padding:6px 14px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:11px;transition:all .2s}
+.btn-logout:hover{background:rgba(204,34,51,.2);color:var(--red3)}
+
+.tabs{display:flex;gap:0;border-bottom:1px solid #1a0508;padding:0 24px;background:var(--bg1);overflow-x:auto}
+.tab{padding:14px 20px;font-family:var(--mono);font-size:11px;letter-spacing:1.5px;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase;white-space:nowrap}
+.tab:hover{color:var(--text2)}.tab.active{color:var(--red3);border-bottom-color:var(--red2)}
+
+.content{padding:28px 24px;max-width:1200px;margin:0 auto}
+
+.card{background:linear-gradient(160deg,#0d0505,#080202);border:1px solid #1a0508;border-radius:12px;padding:24px;margin-bottom:20px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#2a0a10,transparent)}
+.card-title{font-family:var(--mono);font-size:11px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'//';color:var(--red2)}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+
+.stat{background:#050000;border:1px solid #1a0508;border-radius:10px;padding:16px;text-align:center}
+.stat-num{font-family:var(--head);font-size:28px;font-weight:900;color:var(--red2)}
+.stat-num.green{color:var(--green2)}.stat-num.gold{color:var(--gold)}.stat-num.red{color:var(--red3)}
+.stat-lbl{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:4px;letter-spacing:1px}
+
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:10px;color:var(--text2);font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.fg input,.fg select{width:100%;background:#0a0202;border:1px solid #2a0a10;border-radius:7px;color:white;padding:9px 13px;font-size:13px;font-family:var(--mono);outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus{border-color:var(--red2)}
+.fg select option{background:#0d0404}
+
+.btn{padding:10px 20px;border:none;border-radius:7px;cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:1px;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--red),var(--red2));color:white}
+.btn-primary:hover{opacity:.85}
+.btn-danger{background:linear-gradient(135deg,#7A0010,#AA0020);color:white}
+.btn-danger:hover{opacity:.85}
+.btn-success{background:linear-gradient(135deg,#187A3A,#22AA50);color:white}
+.btn-success:hover{opacity:.85}
+.btn-gold{background:linear-gradient(135deg,#5A3A00,#886010);color:white}
+.btn-gold:hover{opacity:.85}
+.btn-purple{background:linear-gradient(135deg,#4A1A8A,#7733CC);color:white}
+.btn-purple:hover{opacity:.85}
+.btn-sm{padding:5px 12px;font-size:10px}.btn-full{width:100%;padding:11px}
+
+.key-box{background:#050000;border:1px solid #2a0a10;border-radius:8px;padding:12px 16px;font-family:var(--mono);font-size:13px;display:none;margin-top:12px;position:relative;overflow:hidden}
+.key-box.show{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.key-box .key-text{flex:1;word-break:break-all}
+.key-box .key-text.premium{color:var(--gold)}.key-box .key-text.free{color:var(--green2)}
+.key-box::after{content:'';position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red2),transparent);animation:scanline 2s linear infinite;pointer-events:none}
+@keyframes scanline{0%{top:-10%}100%{top:110%}}
+
+.alert{padding:10px 14px;border-radius:7px;font-family:var(--mono);font-size:12px;margin-top:10px;display:none}
+.alert.show{display:block}
+.alert-ok{background:rgba(34,187,102,.1);border:1px solid rgba(34,187,102,.3);color:var(--green2)}
+.alert-err{background:rgba(204,34,51,.1);border:1px solid rgba(204,34,51,.3);color:var(--red3)}
+.alert-info{background:rgba(180,20,40,.1);border:1px solid rgba(180,20,40,.3);color:var(--red3)}
+
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:10px 12px;color:var(--text3);font-family:var(--mono);font-size:10px;letter-spacing:1.5px;border-bottom:1px solid #1a0508;text-transform:uppercase}
+td{padding:9px 12px;border-bottom:1px solid rgba(26,5,8,.8);color:var(--text);vertical-align:middle;font-family:var(--mono);font-size:11px}
+tr:hover td{background:rgba(204,34,51,.04)}
+
+.pill{display:inline-block;padding:3px 8px;border-radius:4px;font-size:9px;font-family:var(--mono);font-weight:700;letter-spacing:1px}
+.pill-premium{background:rgba(221,170,51,.15);border:1px solid rgba(221,170,51,.3);color:var(--gold)}
+.pill-free{background:rgba(34,187,102,.12);border:1px solid rgba(34,187,102,.3);color:var(--green2)}
+.pill-valid{background:rgba(34,187,102,.12);border:1px solid rgba(34,187,102,.3);color:var(--green2)}
+.pill-invalid{background:rgba(204,34,51,.12);border:1px solid rgba(204,34,51,.3);color:var(--red3)}
+.pill-suspended{background:rgba(221,170,51,.15);border:1px solid rgba(221,170,51,.4);color:var(--gold)}
+.pill-used{background:rgba(153,68,255,.12);border:1px solid rgba(153,68,255,.3);color:var(--purple)}
+.pill-active{background:rgba(34,187,102,.12);border:1px solid rgba(34,187,102,.3);color:var(--green2)}
+
+.hwid-tag{font-family:var(--mono);font-size:10px;color:var(--text3);background:#050000;border:1px solid #1a0508;border-radius:4px;padding:2px 6px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}
+
+.sep{height:1px;background:linear-gradient(90deg,transparent,#2a0a10,transparent);margin:20px 0}
+.copy-btn{background:rgba(204,34,51,.15);border:1px solid rgba(204,34,51,.3);color:var(--red3);padding:5px 10px;border-radius:5px;cursor:pointer;font-family:var(--mono);font-size:10px;white-space:nowrap;transition:all .2s}
+.copy-btn:hover{background:rgba(204,34,51,.35)}
+
+.panel{display:none}.panel.active{display:block}
+
+.api-block{background:#050000;border:1px solid #1a0508;border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:11px;line-height:1.8;margin-bottom:14px}
+.c-comment{color:var(--text3)}.c-key{color:var(--red3)}.c-val{color:var(--green2)}.c-str{color:var(--gold)}.c-url{color:var(--red2)}
+.glow-red{box-shadow:0 0 20px rgba(204,34,51,.2)}
+
+.user-card{background:#050000;border:1px solid #2a0a10;border-radius:10px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--purple));display:flex;align-items:center;justify-content:center;font-family:var(--head);font-size:16px;font-weight:900;color:white;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-family:var(--head);font-size:13px;color:var(--text);letter-spacing:1px}
+.user-email{font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:2px}
+.user-key{font-family:var(--mono);font-size:10px;color:var(--gold);margin-top:3px;word-break:break-all}
+.user-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+@media(max-width:700px){.grid2{grid-template-columns:1fr}.grid3{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo"><h1>RBX KEY</h1><p>// KEY MANAGEMENT SYSTEM</p></div>
+    <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@rbx.com" autocomplete="off"/></div>
+    <div class="form-group"><label>Senha</label><input type="password" id="loginPass" placeholder="••••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn-login" onclick="doLogin()">ACESSAR PAINEL</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div><div class="topbar-logo">RBX KEY</div><div class="topbar-sub">// KEY MANAGEMENT PANEL V5</div></div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-badge">ADMIN</span>
+    <button class="btn-logout" onclick="doLogout()">SAIR</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('dashboard')">Dashboard</div>
+    <div class="tab"        onclick="switchTab('generate')">Gerar Key</div>
+    <div class="tab"        onclick="switchTab('validate')">Validar Key</div>
+    <div class="tab"        onclick="switchTab('keys')">Todas as Keys</div>
+    <div class="tab"        onclick="switchTab('userkeys')">Keys Logadas</div>
+    <div class="tab"        onclick="switchTab('revoked')">Keys Revogadas</div>
+    <div class="tab"        onclick="switchTab('deleted')">Keys Excluídas</div>
+    <div class="tab"        onclick="switchTab('accounts')">Contas</div>
+    <div class="tab"        onclick="switchTab('hwid')">HWID</div>
+    <div class="tab"        onclick="switchTab('api')">API</div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="grid3">
+        <div class="stat"><div class="stat-num" id="s-total">0</div><div class="stat-lbl">// KEYS GERADAS</div></div>
+        <div class="stat"><div class="stat-num green" id="s-valid">0</div><div class="stat-lbl">// VÁLIDAS</div></div>
+        <div class="stat"><div class="stat-num gold" id="s-premium">0</div><div class="stat-lbl">// PREMIUM</div></div>
+        <div class="stat"><div class="stat-num" id="s-free" style="color:var(--green2)">0</div><div class="stat-lbl">// FREE</div></div>
+        <div class="stat"><div class="stat-num red" id="s-revoked">0</div><div class="stat-lbl">// REVOGADAS</div></div>
+        <div class="stat"><div class="stat-num" id="s-hwid" style="color:var(--purple)">0</div><div class="stat-lbl">// HWIDs USADOS</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Últimas Keys Geradas</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Key</th><th>Tipo</th><th>Usuário/Email</th><th>Status</th><th>HWID</th><th>Gerada em</th></tr></thead>
+            <tbody id="recentTable"><tr><td colspan="6" style="color:var(--text3);text-align:center;padding:20px">Nenhuma key ainda</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- GERAR KEY -->
+    <div class="panel" id="panel-generate">
+      <div class="grid2">
+        <div class="card glow-red">
+          <div class="card-title">Gerar Nova Key</div>
+          <div class="fg">
+            <label>Tipo e Duração da Key</label>
+            <select id="genType">
+              <!-- FREE -->
+              <option value="free">Free — 24 horas</option>
+              <option value="free7">Free — 7 dias</option>
+              <option value="free30">Free — 30 dias</option>
+              <option value="free_unlimited">Free — Ilimitado</option>
+              <!-- PREMIUM -->
+              <option value="premium">Premium — Ilimitado (sem expiração)</option>
+              <option value="premium7">Premium — 7 dias</option>
+              <option value="premium30">Premium — 30 dias</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Usuário / Discord ID (opcional)</label>
+            <input type="text" id="genUser" placeholder="Ex: RBXUser#1234"/>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="generateKey()">// GERAR KEY</button>
+          <div class="key-box" id="genResult">
+            <span class="key-text" id="genKeyText"></span>
+            <button class="copy-btn" onclick="copyText(lastKey)">COPIAR</button>
+          </div>
+          <div class="alert" id="genAlert"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Formatos de Key</div>
+          <div style="font-family:var(--mono);font-size:11px;line-height:2;color:var(--text2)">
+            <div><span class="pill pill-free">FREE</span> <span style="color:var(--green2)">KEYF_</span> + 15 chars</div>
+            <div style="color:var(--text3);font-size:10px;padding-left:4px">→ 24h, 7d, 30d ou Ilimitado</div>
+            <div class="sep"></div>
+            <div><span class="pill pill-premium">PREMIUM</span> <span style="color:var(--gold)">KEYP_</span> + 20 chars</div>
+            <div style="color:var(--text3);font-size:10px;padding-left:4px">→ Ilimitado, 7d ou 30d</div>
+            <div class="sep"></div>
+            <div style="color:var(--text3);font-size:10px;line-height:1.8">
+              <div>// HWID vinculado no 1º uso</div>
+              <div>// Duração conta a partir do 1º uso</div>
+              <div>// RESET KEY = suspende (dono reativa)</div>
+              <div>// REMOVE KEY = revogação permanente</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VALIDAR KEY -->
+    <div class="panel" id="panel-validate">
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Verificar / Revogar Key</div>
+          <div class="fg"><label>Key</label><input type="text" id="checkKeyInput" placeholder="KEYP_... ou KEYF_..." style="font-family:var(--mono)"/></div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary" style="flex:1" onclick="checkKey()">VERIFICAR</button>
+            <button class="btn btn-danger"  style="flex:1" onclick="revokeKey('removed-key')">REVOGAR</button>
+          </div>
+          <div class="alert" id="checkAlert"></div>
+          <div id="keyDetailBox" style="display:none;margin-top:14px">
+            <div class="sep"></div>
+            <div style="font-family:var(--mono);font-size:11px;line-height:2.4">
+              <div><span style="color:var(--text3)">KEY &nbsp;&nbsp;&nbsp;&nbsp;</span><span id="di-key" style="color:var(--gold)"></span></div>
+              <div><span style="color:var(--text3)">TIPO &nbsp;&nbsp;&nbsp;</span><span id="di-type"></span></div>
+              <div><span style="color:var(--text3)">USUÁRIO &nbsp;</span><span id="di-user" style="color:var(--text2)"></span></div>
+              <div><span style="color:var(--text3)">EMAIL &nbsp;&nbsp;&nbsp;</span><span id="di-email" style="color:var(--text2)"></span></div>
+              <div><span style="color:var(--text3)">EXPIRA &nbsp;&nbsp;</span><span id="di-exp" style="color:var(--red3)"></span></div>
+              <div><span style="color:var(--text3)">HWID &nbsp;&nbsp;&nbsp;&nbsp;</span><span id="di-hwid" style="color:var(--purple)"></span></div>
+              <div><span style="color:var(--text3)">STATUS &nbsp;&nbsp;</span><span id="di-status"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Resetar HWID de uma Key</div>
+          <div class="fg"><label>Key para resetar HWID</label><input type="text" id="hwidResetInput" placeholder="KEYP_... ou KEYF_..." style="font-family:var(--mono)"/></div>
+          <button class="btn btn-gold btn-full" onclick="resetHWID()">// RESETAR HWID</button>
+          <div class="alert" id="hwidAlert"></div>
+          <div style="margin-top:14px;font-family:var(--mono);font-size:10px;color:var(--text3);line-height:1.8">
+            <div>// HWID é vinculado no primeiro uso da key</div>
+            <div>// Resetar permite trocar de máquina</div>
+            <div>// Notificação automática enviada ao usuário</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TODAS AS KEYS -->
+    <div class="panel" id="panel-keys">
+      <div class="card">
+        <div class="card-title">Todas as Keys Geradas</div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <input type="text" id="filterInput" placeholder="Buscar key, usuário ou email..." style="background:#0a0202;border:1px solid #2a0a10;border-radius:7px;color:white;padding:8px 12px;font-family:var(--mono);font-size:11px;outline:none;flex:1;min-width:180px" oninput="renderAllKeys()"/>
+          <select id="filterType" style="background:#0a0202;border:1px solid #2a0a10;border-radius:7px;color:white;padding:8px 12px;font-family:var(--mono);font-size:11px;outline:none" onchange="renderAllKeys()">
+            <option value="all">Todos os tipos</option>
+            <option value="premium">Premium</option>
+            <option value="free">Free</option>
+          </select>
+          <select id="filterStatus" style="background:#0a0202;border:1px solid #2a0a10;border-radius:7px;color:white;padding:8px 12px;font-family:var(--mono);font-size:11px;outline:none" onchange="renderAllKeys()">
+            <option value="all">Todos status</option>
+            <option value="valid">Válidas</option>
+            <option value="suspended">Suspensas</option>
+            <option value="revoked">Revogadas</option>
+          </select>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Key</th><th>Tipo</th><th>Usuário/Email</th><th>Expira</th><th>HWID</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="allKeysTable"><tr><td colspan="7" style="color:var(--text3);text-align:center;padding:20px">Nenhuma key gerada ainda</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEYS REVOGADAS -->
+    <div class="panel" id="panel-revoked">
+      <div class="card">
+        <div class="card-title">Keys Revogadas Permanentemente</div>
+        <p style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:18px">
+          // Keys revogadas pelo admin através do botão REVOGAR.<br>
+          // Estas keys foram permanentemente desativadas (active=false).<br>
+          // Não podem ser reativadas — usuários precisam de novas keys.
+        </p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <input type="text" id="revokedFilter" placeholder="Buscar key revogada..." style="background:#0a0202;border:1px solid #2a0a10;border-radius:7px;color:white;padding:8px 12px;font-family:var(--mono);font-size:11px;outline:none;flex:1;min-width:180px" oninput="renderRevokedKeys()"/>
+          <button class="btn btn-primary" onclick="renderRevokedKeys()">// ATUALIZAR</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Key</th><th>Tipo</th><th>Usuário/Email</th><th>HWID</th><th>Revogada em</th></tr></thead>
+            <tbody id="revokedTable"><tr><td colspan="5" style="color:var(--text3);text-align:center;padding:20px">Nenhuma key revogada</td></tr></tbody>
+          </table>
+        </div>
+        <div id="revokedCount" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:10px;text-align:right"></div>
+      </div>
+    </div>
+
+    <!-- KEYS EXCLUÍDAS -->
+    <div class="panel" id="panel-deleted">
+      <div class="card">
+        <div class="card-title">Keys Excluídas (Exclusão em Massa)</div>
+        <p style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:18px">
+          // Keys excluídas através do botão "REMOVER SELECIONADAS" em Keys Logadas.<br>
+          // Estas keys também foram permanentemente desativadas.<br>
+          // Diferente de "Revogadas" apenas para organização — ambas estão inativas.
+        </p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <input type="text" id="deletedFilter" placeholder="Buscar key excluída..." style="background:#0a0202;border:1px solid #2a0a10;border-radius:7px;color:white;padding:8px 12px;font-family:var(--mono);font-size:11px;outline:none;flex:1;min-width:180px" oninput="renderDeletedKeys()"/>
+          <button class="btn btn-primary" onclick="renderDeletedKeys()">// ATUALIZAR</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Key</th><th>Tipo</th><th>Usuário/Email</th><th>HWID</th><th>Excluída em</th></tr></thead>
+            <tbody id="deletedTable"><tr><td colspan="5" style="color:var(--text3);text-align:center;padding:20px">Nenhuma key excluída</td></tr></tbody>
+          </table>
+        </div>
+        <div id="deletedCount" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:10px;text-align:right"></div>
+      </div>
+    </div>
+
+    <!-- KEYS LOGIN -->
+    <div class="panel" id="panel-userkeys">
+      <div class="card">
+        <div class="card-title">Keys Login — Keys e Contas Vinculadas</div>
+        <p style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:18px">
+          // Todas as keys geradas aparecem aqui, com ou sem conta vinculada.<br>
+          // Keys com conta mostram email e nome real do executor.<br>
+          // RESET KEY suspende (dono reativa). REMOVE KEY revoga definitivamente.
+        </p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+          <input type="text" id="userFilter" placeholder="Buscar por email, nome ou key..." style="background:#0a0202;border:1px solid #2a0a10;border-radius:7px;color:white;padding:8px 12px;font-family:var(--mono);font-size:11px;outline:none;flex:1;min-width:180px" oninput="renderUsers()"/>
+          <select id="userFilterStatus" style="background:#0a0202;border:1px solid #2a0a10;border-radius:7px;color:white;padding:8px 12px;font-family:var(--mono);font-size:11px;outline:none" onchange="renderUsers()">
+            <option value="all">Todas</option>
+            <option value="linked">Com conta</option>
+            <option value="unlinked">Sem conta</option>
+            <option value="valid">Válidas</option>
+            <option value="revoked">Revogadas</option>
+          </select>
+          <button class="btn btn-primary" onclick="loadUsers()">// ATUALIZAR</button>
+          <button class="btn btn-danger" id="bulkDeleteBtn" onclick="bulkDeleteSelected()" style="display:none">🗑 REMOVER SELECIONADAS</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table id="userkeysTable" style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:#0a0202">
+              <th style="padding:10px 12px;width:36px;border-bottom:1px solid #1a0508"><input type="checkbox" id="selectAllKeys" onchange="toggleSelectAll(this)" style="cursor:pointer;accent-color:var(--red2)"/></th>
+              <th style="padding:10px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);border-bottom:1px solid #1a0508">KEY</th>
+              <th style="padding:10px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);border-bottom:1px solid #1a0508">TIPO</th>
+              <th style="padding:10px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);border-bottom:1px solid #1a0508">NOME</th>
+              <th style="padding:10px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);border-bottom:1px solid #1a0508">EMAIL</th>
+              <th style="padding:10px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);border-bottom:1px solid #1a0508">CONTA</th>
+              <th style="padding:10px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);border-bottom:1px solid #1a0508">STATUS</th>
+              <th style="padding:10px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);border-bottom:1px solid #1a0508">HWID</th>
+              <th style="padding:10px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);border-bottom:1px solid #1a0508">EXPIRA</th>
+              <th style="padding:10px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);border-bottom:1px solid #1a0508">AÇÕES</th>
+            </tr></thead>
+            <tbody id="userkeysBody"><tr><td colspan="10" style="color:var(--text3);font-family:var(--mono);font-size:11px;text-align:center;padding:30px">Clique em ATUALIZAR para carregar</td></tr></tbody>
+          </table>
+        </div>
+        <div id="userkeysCount" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:10px;text-align:right"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Enviar Notificação Manual</div>
+        <div class="grid2">
+          <div>
+            <div class="fg"><label>Email do usuário</label><input type="email" id="notifEmail" placeholder="usuario@email.com"/></div>
+            <div class="fg">
+              <label>Motivo</label>
+              <select id="notifReason">
+                <option value="reset-hwid">HWID Resetado</option>
+                <option value="removed-key">Key Removida</option>
+                <option value="reset-key">Key Resetada</option>
+                <option value="generic">Aviso Geral</option>
+              </select>
+            </div>
+            <div class="fg"><label>Mensagem</label><input type="text" id="notifMsg" placeholder="Mensagem para o usuário..."/></div>
+            <button class="btn btn-purple btn-full" onclick="sendNotification()">// ENVIAR NOTIFICAÇÃO</button>
+            <div class="alert" id="notifAlert"></div>
+          </div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);line-height:2">
+            <div>// A notificação aparece no executor do usuário</div>
+            <div>// Em um card substituindo a tela principal</div>
+            <div style="margin-top:12px;color:var(--text2)">Motivos:</div>
+            <div>→ <span style="color:var(--purple)">HWID Resetado</span> — precisa reinserir key</div>
+            <div>→ <span style="color:var(--red3)">Key Removida</span> — precisa de nova key</div>
+            <div>→ <span style="color:var(--gold)">Key Resetada</span> — suspensa, precisa reativar</div>
+            <div>→ <span style="color:var(--text2)">Aviso Geral</span> — mensagem livre</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTAS (acc.js) -->
+    <div class="panel" id="panel-accounts">
+      <div class="card">
+        <div class="card-title">Contas do Executor (acc.js)</div>
+        <p style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:18px">
+          // Contas salvas pelo executor (email + senha + key).<br>
+          // Armazenadas na store redux-accounts.<br>
+          // Senha armazenada como hash SHA-256 — nunca em texto puro.
+        </p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <input type="text" id="accFilter" placeholder="Buscar por email, nome ou key..." style="background:#0a0202;border:1px solid #2a0a10;border-radius:7px;color:white;padding:8px 12px;font-family:var(--mono);font-size:11px;outline:none;flex:1;min-width:180px" oninput="renderAccounts()"/>
+          <button class="btn btn-primary" onclick="loadAccounts()">// ATUALIZAR</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Email</th><th>Nome</th><th>Key</th><th>Tipo</th><th>HWID</th><th>Status</th><th>Registrado</th><th>Ações</th></tr></thead>
+            <tbody id="accTable"><tr><td colspan="8" style="color:var(--text3);text-align:center;padding:20px">Clique em ATUALIZAR para carregar</td></tr></tbody>
+          </table>
+        </div>
+        <div id="accCount" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:10px;text-align:right"></div>
+      </div>
+    </div>
+
+    <!-- HWID -->
+    <div class="panel" id="panel-hwid">
+      <div class="card">
+        <div class="card-title">Gerenciamento de HWID</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Key</th><th>Tipo</th><th>Usuário/Email</th><th>HWID Vinculado</th><th>Ações</th></tr></thead>
+            <tbody id="hwidTable"><tr><td colspan="5" style="color:var(--text3);text-align:center;padding:20px">Nenhum HWID vinculado ainda</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- API -->
+    <div class="panel" id="panel-api">
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Endpoints da API</div>
+          <div style="margin-bottom:10px">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:6px">SUA ADMIN KEY</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span id="adminKeyShow" style="font-family:var(--mono);font-size:11px;color:var(--red3);background:#050000;border:1px solid #1a0508;border-radius:5px;padding:6px 10px;flex:1;word-break:break-all"></span>
+              <button class="copy-btn" onclick="copyText(adminApiKey)">COPIAR</button>
+            </div>
+          </div>
+          <div class="sep"></div>
+          <div class="api-block">
+<span class="c-comment">// Key endpoints</span>
+<br>GET <span class="c-url">/api/validate</span>?key=&hwid=
+<br>GET <span class="c-url">/api/generate</span>?token=&type=&user=
+<br>&nbsp;&nbsp;<span class="c-comment">// types: free, free7, free30, free_unlimited</span>
+<br>&nbsp;&nbsp;<span class="c-comment">//        premium, premium7, premium30</span>
+<br>GET <span class="c-url">/api/revoke</span>?token=&key=&reason=removed-key|reset-key
+<br>GET <span class="c-url">/api/reset-hwid</span>?token=&key=
+<br>GET <span class="c-url">/api/list</span>?token=
+<br><br><span class="c-comment">// Contas (acc.js)</span>
+<br>POST <span class="c-url">/api/acc</span> body:{email,password,key,name,hwid}
+<br>GET  <span class="c-url">/api/acc</span>?action=login&email=&password=
+<br>GET  <span class="c-url">/api/acc</span>?action=activate&email=&password=&key=
+<br>GET  <span class="c-url">/api/acc</span>?action=list&token=
+<br>GET  <span class="c-url">/api/acc</span>?action=notify&token=&email=&msg=&reason=
+<br>DELETE <span class="c-url">/api/acc</span>?token=&email=
+<br><br><span class="c-comment">// Audit / Chat</span>
+<br>GET <span class="c-url">/api/audit</span>?token=&limit=50
+<br>GET <span class="c-url">/api/chat</span>?action=history|send|react|unread|markread
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Fluxo no Executor (C#)</div>
+          <div class="api-block" style="font-size:10px;line-height:2">
+<span class="c-comment">// 1. Login / checar notificações</span>
+<br><span class="c-key">var</span> url = <span class="c-str">$"{API}/acc?action=login&email={email}&password={pass}"</span>;
+<br><span class="c-key">var</span> res = JsonDocument.Parse(<span class="c-key">await</span> Http.GetStringAsync(url));
+<br><br><span class="c-comment">// 2. Se houver notificação → mostrar card</span>
+<br><span class="c-key">if</span> (res.notifications.Length > 0) {
+<br>&nbsp;&nbsp;ShowNotificationCard(res.notifications[0]);
+<br>}
+<br><br><span class="c-comment">// 3. Notificação reset-hwid → card especial</span>
+<br><span class="c-comment">// "Seu HWID foi resetado. Insira sua key."</span>
+<br><span class="c-comment">// → TextBox + botão "CONTINUAR"</span>
+<br><br><span class="c-comment">// 4. Key suspensa (reset-key) → ativar</span>
+<br><span class="c-key">var</span> actUrl = <span class="c-str">$"{API}/acc?action=activate&email=...&key=..."</span>;
+          </div>
+        </div>
+      </div>
+
+      <!-- DISCORD BOT INTEGRATION -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-title">Integração com Bot do Discord — Giveaway / Pagamento</div>
+        <p style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:18px">
+          // Use estes códigos no seu bot para gerar keys automaticamente<br>
+          // quando alguém ganhar no giveaway ou quitar o pagamento.
+        </p>
+
+        <!-- PYTHON EXAMPLE -->
+        <div style="margin-bottom:24px">
+          <div style="font-family:var(--head);font-size:13px;color:var(--gold2);margin-bottom:10px">// PYTHON (discord.py)</div>
+          <div class="api-block" style="font-size:10px;line-height:2">
+<span class="c-comment"># pip install aiohttp</span>
+<br><span class="c-key">import</span> aiohttp
+<br><span class="c-key">import</span> asyncio
+<br><br><span class="c-key">API_URL</span> = <span class="c-str">"https://seu-site.netlify.app/api"</span>
+<br><span class="c-key">ADMIN_TOKEN</span> = <span class="c-str">"redux-admin-secret"</span>
+<br><br><span class="c-key">async def</span> <span class="c-val">generate_key</span>(type: str, user: str) -> str:
+<br>&nbsp;&nbsp;<span class="c-comment">"""Gera key automaticamente via API"""</span>
+<br>&nbsp;&nbsp;url = <span class="c-str">f"{API_URL}/generate?token={ADMIN_TOKEN}&type={type}&user={user}"</span>
+<br>&nbsp;&nbsp;<span class="c-key">async with</span> aiohttp.ClientSession() <span class="c-key">as</span> session:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-key">async with</span> session.get(url) <span class="c-key">as</span> resp:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data = <span class="c-key">await</span> resp.json()
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-key">return</span> data.get(<span class="c-str">"key"</span>, <span class="c-str">""</span>)
+<br><br><span class="c-comment"># No seu bot:</span>
+<br><span class="c-key">@client.event</span>
+<br><span class="c-key">async def</span> <span class="c-val">on_message</span>(message):
+<br>&nbsp;&nbsp;<span class="c-key">if</span> <span class="c-str">"!giveaway"</span> <span class="c-key">in</span> message.content:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;winner = message.author
+<br>&nbsp;&nbsp;&nbsp;&nbsp;key = <span class="c-key">await</span> generate_key(<span class="c-str">"premium"</span>, str(winner))
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-comment"># Envia DM para o vencedor</span>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;dm = <span class="c-key">await</span> winner.create_dm()
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-key">await</span> dm.send(<span class="c-str">f"Parabéns! Você ganhou uma key Premium:\\n\\n```{key}```\\n\\nCopie e use no executor!"</span>)
+<br><br><span class="c-comment"># Para pagamento confirmado:</span>
+<br><span class="c-key">async def</span> <span class="c-val">confirmar_pagamento</span>(user_id, discord_user):
+<br>&nbsp;&nbsp;key = <span class="c-key">await</span> generate_key(<span class="c-str">"premium30"</span>, str(discord_user))
+<br>&nbsp;&nbsp;user = client.get_user(user_id)
+<br>&nbsp;&nbsp;dm = <span class="c-key">await</span> user.create_dm()
+<br>&nbsp;&nbsp;<span class="c-key">await</span> dm.send(<span class="c-str">f"Pagamento confirmado! Sua key Premium 30 dias:\\n\\n```{key}```"</span>)
+          </div>
+        </div>
+
+        <!-- JAVASCRIPT EXAMPLE -->
+        <div>
+          <div style="font-family:var(--head);font-size:13px;color:var(--gold2);margin-bottom:10px">// JAVASCRIPT (discord.js)</div>
+          <div class="api-block" style="font-size:10px;line-height:2">
+<span class="c-comment">// npm install axios</span>
+<br><span class="c-key">const</span> axios = require(<span class="c-str">'axios'</span>);
+<br><br><span class="c-key">const</span> API_URL = <span class="c-str">'https://seu-site.netlify.app/api'</span>;
+<br><span class="c-key">const</span> ADMIN_TOKEN = <span class="c-str">'redux-admin-secret'</span>;
+<br><br><span class="c-key">async function</span> <span class="c-val">generateKey</span>(type, user) {
+<br>&nbsp;&nbsp;<span class="c-key">const</span> res = <span class="c-key">await</span> axios.get(<span class="c-str">`${API_URL}/generate?token=${ADMIN_TOKEN}&type=${type}&user=${encodeURIComponent(user)}`</span>);
+<br>&nbsp;&nbsp;<span class="c-key">return</span> res.data.success ? res.data.key : <span class="c-key">null</span>;
+<br>}
+<br><br><span class="c-comment">// Evento de giveaway (use o seu sistema de sorteio)</span>
+<br>client.on(<span class="c-str">'messageCreate'</span>, async (message) => {
+<br>&nbsp;&nbsp;<span class="c-key">if</span> (message.content === <span class="c-str">'!sortear'</span>) {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-comment">// Seu código de sorteio aqui...</span>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-key">const</span> winner = message.mentions.users.first() || message.author;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-key">const</span> key = <span class="c-key">await</span> generateKey(<span class="c-str">'premium'</span>, winner.username);
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-key">if</span> (key) {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-key">const</span> dm = <span class="c-key">await</span> winner.createDM();
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dm.send(<span class="c-str">`Parabéns! Você ganhou uma key Premium!\\n\\n\\\`\\\`\\\`${key}\\\`\\\`\\\`\\n\\nCopie e use no executor!`</span>);
+<br>&nbsp;&nbsp;&nbsp;&nbsp;}
+<br>&nbsp;&nbsp;}
+<br>});
+<br><br><span class="c-comment">// Função para pagamento confirmado (chame do seu webhook)</span>
+<br><span class="c-key">async function</span> <span class="c-val">confirmarPagamento</span>(discordId, tipoKey = <span class="c-str">'premium30'</span>) {
+<br>&nbsp;&nbsp;<span class="c-key">const</span> user = client.users.cache.get(discordId);
+<br>&nbsp;&nbsp;<span class="c-key">if</span> (!user) <span class="c-key">return</span>;
+<br>&nbsp;&nbsp;<span class="c-key">const</span> key = <span class="c-key">await</span> generateKey(tipoKey, user.username);
+<br>&nbsp;&nbsp;<span class="c-key">if</span> (key) {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-key">const</span> dm = <span class="c-key">await</span> user.createDM();
+<br>&nbsp;&nbsp;&nbsp;&nbsp;dm.send(<span class="c-str">`Pagamento confirmado! Sua key:\\n\\n\\\`\\\`\\\`${key}\\\`\\\`\\\`\\n\\nUse no executor!`</span>);
+<br>&nbsp;&nbsp;}
+<br>}
+<br><br><span class="c-comment">// Exemplo de chamada via webhook de pagamento</span>
+<br>app.post(<span class="c-str">'/webhook/pagamento'</span>, async (req, res) => {
+<br>&nbsp;&nbsp;<span class="c-key">const</span> { discord_id, status } = req.body;
+<br>&nbsp;&nbsp;<span class="c-key">if</span> (status === <span class="c-str">'approved'</span>) {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-key">await</span> confirmarPagamento(discord_id, <span class="c-str">'premium30'</span>);
+<br>&nbsp;&nbsp;}
+<br>&nbsp;&nbsp;res.send(<span class="c-str">'OK'</span>);
+<br>});
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const ADMIN_EMAIL     = 'RBXexploit@gmail.com';
+const ADMIN_PASS      = 'RBX1#';
+const ADMIN_API_TOKEN = 'redux-admin-secret';
+
+let keys        = [];
+let revokedKeys = [];  // Keys com active=false (revogadas permanentemente)
+let deletedKeys = [];  // Keys excluídas via exclusão em massa
+let users       = [];
+let accounts    = [];
+let lastKey     = '';
+let adminApiKey = ADMIN_API_TOKEN;
+const API = window.location.origin + '/api';
+
+// ── LOGIN ──────────────────────────────────────────────
+function doLogin() {
+  const e = document.getElementById('loginEmail').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginErr');
+  if (e === ADMIN_EMAIL && p === ADMIN_PASS) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('adminKeyShow').textContent = adminApiKey;
+    loadAllKeys().then(() => { updateStats(); renderRecent(); });
+  } else {
+    err.textContent = '// CREDENCIAIS INVÁLIDAS';
+    setTimeout(() => err.textContent = '', 2500);
+  }
+}
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPass').value  = '';
+}
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ── TABS ───────────────────────────────────────────────
+const TAB_IDS = ['dashboard','generate','validate','keys','userkeys','revoked','deleted','accounts','hwid','api'];
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', TAB_IDS[i] === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+  if (name === 'keys')      renderAllKeys();
+  if (name === 'revoked')   renderRevokedKeys();
+  // Fecha dropdowns de renovar ao clicar fora
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.renew-wrap')) {
+      document.querySelectorAll('.renew-wrap div[style*="block"]').forEach(d => d.style.display = 'none');
+    }
+  });
+  if (name === 'deleted')   renderDeletedKeys();
+  if (name === 'hwid')      renderHWID();
+  if (name === 'dashboard') updateStats();
+  if (name === 'userkeys')  loadUsers();
+  if (name === 'accounts')  loadAccounts();
+}
+
+// ── GERAR KEY ──────────────────────────────────────────
+async function generateKey() {
+  const type = document.getElementById('genType').value;
+  const user = document.getElementById('genUser').value.trim() || 'Anonymous';
+
+  showAlert('genAlert', 'info', 'Gerando key...');
+  try {
+    const r    = await fetch(`${API}/generate?token=${adminApiKey}&type=${type}&user=${encodeURIComponent(user)}`);
+    const data = await r.json();
+    if (!data.success) { showAlert('genAlert', 'err', 'Erro: ' + (data.error || 'desconhecido')); return; }
+
+    lastKey = data.key;
+    const kt = document.getElementById('genKeyText');
+    kt.textContent = data.key;
+    kt.className   = 'key-text ' + (type.startsWith('premium') ? 'premium' : 'free');
+    document.getElementById('genResult').classList.add('show');
+    showAlert('genAlert', 'ok', `Key gerada! Expira: ${data.expiry} | Tipo: ${data.type.toUpperCase()}`);
+    await loadAllKeys(); updateStats(); renderRecent();
+  } catch (e) { showAlert('genAlert', 'err', 'Erro de rede: ' + e.message); }
+}
+
+// ── VERIFICAR / REVOGAR ────────────────────────────────
+async function checkKey() {
+  const val = document.getElementById('checkKeyInput').value.trim();
+  const box = document.getElementById('keyDetailBox');
+  if (!val) { showAlert('checkAlert', 'err', 'Digite uma key.'); return; }
+  const k = keys.find(x => x.key === val);
+  if (!k) { showAlert('checkAlert', 'err', 'Key não encontrada.'); box.style.display = 'none'; return; }
+  document.getElementById('di-key').textContent  = k.key;
+  document.getElementById('di-type').innerHTML   = `<span class="pill ${k.type === 'premium' ? 'pill-premium' : 'pill-free'}">${k.type.toUpperCase()}</span>`;
+  document.getElementById('di-user').textContent = k.user || '-';
+  document.getElementById('di-email').textContent = k.email || '-';
+  document.getElementById('di-exp').textContent  = k.expiry || 'Ilimitado';
+  document.getElementById('di-hwid').textContent = k.hwid  || '(não vinculado)';
+
+  let statusHtml = '';
+  if (!k.valid) statusHtml = '<span class="pill pill-invalid">REVOGADA</span>';
+  else if (k.suspended) statusHtml = '<span class="pill pill-suspended">SUSPENSA (aguarda reativação)</span>';
+  else statusHtml = '<span class="pill pill-valid">VÁLIDA</span>';
+  document.getElementById('di-status').innerHTML = statusHtml;
+  box.style.display = 'block';
+  showAlert('checkAlert', 'ok', 'Key encontrada — detalhes abaixo.');
+}
+
+async function revokeKey(reason = 'removed-key') {
+  const val = document.getElementById('checkKeyInput').value.trim();
+  if (!val) { showAlert('checkAlert', 'err', 'Digite uma key.'); return; }
+  try {
+    const r    = await fetch(`${API}/revoke?token=${adminApiKey}&key=${encodeURIComponent(val)}&reason=${reason}`);
+    const data = await r.json();
+    if (data.success) {
+      showAlert('checkAlert', 'ok', reason === 'removed-key' ? 'Key revogada e movida para "Keys Revogadas". Usuário notificado.' : 'Key suspensa. Usuário notificado.');
+      document.getElementById('keyDetailBox').style.display = 'none';
+      await loadAllKeys();
+      updateStats();
+      renderAllKeys();
+      renderHWID();
+      renderRevokedKeys();
+      renderDeletedKeys();
+      renderUsers();
+    } else { showAlert('checkAlert', 'err', 'Erro: ' + (data.error || '')); }
+  } catch (e) { showAlert('checkAlert', 'err', 'Erro de rede: ' + e.message); }
+}
+
+async function resetHWID() {
+  const val = document.getElementById('hwidResetInput').value.trim();
+  if (!val) { showAlert('hwidAlert', 'err', 'Digite uma key.'); return; }
+  try {
+    const r    = await fetch(`${API}/reset-hwid?token=${adminApiKey}&key=${encodeURIComponent(val)}`);
+    const data = await r.json();
+    if (data.success) {
+      showAlert('hwidAlert', 'ok', 'HWID resetado! Notificação enviada ao usuário.');
+      await loadAllKeys(); renderHWID(); renderAllKeys(); updateStats();
+    } else { showAlert('hwidAlert', 'err', 'Erro: ' + (data.error || '')); }
+  } catch (e) { showAlert('hwidAlert', 'err', 'Erro de rede: ' + e.message); }
+}
+async function resetHWIDDirect(keyStr) {
+  document.getElementById('hwidResetInput').value = keyStr;
+  switchTab('validate');
+  await resetHWID();
+}
+
+async function renewKey(keyStr, days) {
+  if (!confirm(`Renovar key ${keyStr} por mais ${days === 0 ? 'tempo ilimitado' : days + ' dia(s)'}?`)) return;
+  try {
+    const url = `/api/renew?token=${ADMIN_TOKEN}&key=${encodeURIComponent(keyStr)}&days=${days}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    if (data.success) {
+      showGlobalAlert('ok', `✅ Key renovada! Nova expiração: ${data.expiry || 'Ilimitado'}`);
+      await loadKeys();
+      renderUserKeys();
+    } else {
+      showGlobalAlert('err', `❌ Erro: ${data.error || 'Falha ao renovar'}`);
+    }
+  } catch(e) {
+    showGlobalAlert('err', `❌ ${e.message}`);
+  }
+}
+
+function timeRemaining(expiryStr) {
+  if (!expiryStr || expiryStr === 'Ilimitado') return null;
+  const exp = new Date(expiryStr);
+  if (isNaN(exp)) return null;
+  const diff = exp - Date.now();
+  if (diff <= 0) return { label: 'EXPIRADA', color: 'var(--red2)', expired: true };
+  const days  = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  if (days > 0) return { label: `${days}d ${hours}h`, color: days <= 3 ? 'var(--gold)' : 'var(--green2)', expired: false };
+  const mins = Math.floor((diff % 3600000) / 60000);
+  return { label: `${hours}h ${mins}m`, color: 'var(--gold)', expired: false };
+}
+
+async function quickRevoke(keyStr, reason = 'removed-key') {
+  try {
+    const r    = await fetch(`${API}/revoke?token=${adminApiKey}&key=${encodeURIComponent(keyStr)}&reason=${reason}`);
+    const data = await r.json();
+    if (data.success) {
+      // Recarrega tudo do servidor para garantir consistência entre as abas
+      await loadAllKeys();
+      updateStats();
+      renderAllKeys();
+      renderHWID();
+      renderUsers();
+      renderRevokedKeys();
+      renderDeletedKeys();
+    } else showAlert('checkAlert', 'err', 'Erro: ' + (data.error || ''));
+  } catch (e) { console.error(e); }
+}
+
+// ── KEYS LOGIN ─────────────────────────────────────────
+async function loadUsers() {
+  const tbody = document.getElementById('userkeysBody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="color:var(--text3);font-family:var(--mono);font-size:11px;text-align:center;padding:20px">Carregando...</td></tr>';
+  try {
+    // Carrega accounts (acc.js) e users (register) em paralelo
+    const [rAcc, rReg] = await Promise.allSettled([
+      fetch(`${API}/acc?action=list&token=${adminApiKey}`).then(r=>r.json()),
+      fetch(`${API}/register?action=list&token=${adminApiKey}`).then(r=>r.json())
+    ]);
+    accounts = (rAcc.status === 'fulfilled' && rAcc.value.success) ? (rAcc.value.accounts || []) : accounts;
+    users    = (rReg.status === 'fulfilled' && rReg.value.success) ? (rReg.value.users    || []) : users;
+    renderUsers();
+  } catch (e) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="10" style="color:var(--red3);font-family:var(--mono);font-size:11px;text-align:center;padding:20px">Erro: ${e.message}</td></tr>`;
+  }
+}
+
+// Checkbox select-all
+function toggleSelectAll(cb) {
+  document.querySelectorAll('.key-row-check').forEach(c => c.checked = cb.checked);
+  updateBulkBtn();
+}
+
+function updateBulkBtn() {
+  const any = document.querySelectorAll('.key-row-check:checked').length > 0;
+  const btn = document.getElementById('bulkDeleteBtn');
+  if (btn) btn.style.display = any ? 'inline-block' : 'none';
+}
+
+async function bulkDeleteSelected() {
+  const checked = [...document.querySelectorAll('.key-row-check:checked')];
+  if (!checked.length) return;
+  const keyList = checked.map(c => c.dataset.key);
+  if (!confirm(`Remover permanentemente ${keyList.length} key(s) selecionada(s)? Isso não tem volta.`)) return;
+
+  document.getElementById('bulkDeleteBtn').textContent = `Removendo ${keyList.length}...`;
+  document.getElementById('bulkDeleteBtn').disabled = true;
+
+  let done = 0;
+  for (const k of keyList) {
+    try {
+      // reason=bulk-delete → vai para a tab "Keys Excluídas"
+      await fetch(`${API}/revoke?token=${adminApiKey}&key=${encodeURIComponent(k)}&reason=bulk-delete`);
+      done++;
+    } catch {}
+  }
+
+  // Recarrega do servidor para refletir o estado correto (Keys Excluídas)
+  await loadAllKeys();
+
+  document.getElementById('bulkDeleteBtn').textContent = `🗑 REMOVER SELECIONADAS`;
+  document.getElementById('bulkDeleteBtn').disabled = false;
+  document.getElementById('bulkDeleteBtn').style.display = 'none';
+
+  const sa = document.getElementById('selectAllKeys');
+  if (sa) sa.checked = false;
+
+  renderUsers();
+  updateStats();
+  renderAllKeys();
+  renderRevokedKeys();
+  renderDeletedKeys();
+  showAlert('notifAlert', 'ok', `${done} key(s) excluída(s) com sucesso. Veja em "Keys Excluídas".`);
+}
+
+function renderUsers() {
+  const tbody = document.getElementById('userkeysBody');
+  if (!tbody) return;
+
+  const q  = (document.getElementById('userFilter')?.value || '').toLowerCase();
+  const fs = document.getElementById('userFilterStatus')?.value || 'all';
+
+  // Combina keys com dados de conta — acc.js tem prioridade sobre register legado
+  let combined = keys.map(k => {
+    const accAccount  = accounts.find(a => a.key === k.key);
+    const userAccount = users.find(u => u.key === k.key);
+    // acc.js também enriquece via list.js (campo email/name no próprio objeto key)
+    const account = accAccount
+      ? { email: accAccount.email, name: accAccount.name || accAccount.email }
+      : userAccount
+        ? { email: userAccount.email, name: userAccount.name || userAccount.email }
+        : (k.email ? { email: k.email, name: k.user || k.email } : null);
+    return { ...k, account };
+  });
+
+  combined = combined.filter(item => {
+    if (fs === 'linked'   && !item.account) return false;
+    if (fs === 'unlinked' &&  item.account) return false;
+    if (fs === 'valid'    && (!item.valid || item.suspended)) return false;
+    if (fs === 'revoked'  &&  item.valid) return false;
+    if (q) {
+      const keyMatch   = item.key.toLowerCase().includes(q);
+      const emailMatch = (item.account?.email || '').toLowerCase().includes(q);
+      const nameMatch  = (item.account?.name  || item.user || '').toLowerCase().includes(q);
+      if (!keyMatch && !emailMatch && !nameMatch) return false;
+    }
+    return true;
+  });
+
+  const countEl = document.getElementById('userkeysCount');
+  const withAcc = combined.filter(i => i.account).length;
+  const noAcc   = combined.filter(i => !i.account).length;
+  if (countEl) countEl.textContent = `// ${combined.length} resultado(s) — ${withAcc} com conta · ${noAcc} sem conta`;
+
+  if (!combined.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="color:var(--text3);font-family:var(--mono);font-size:11px;text-align:center;padding:30px">Nenhum resultado</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = combined.map(item => {
+    const acc = item.account;
+    const typePill = `<span class="pill ${item.type === 'premium' ? 'pill-premium' : 'pill-free'}">${item.type.toUpperCase()}</span>`;
+
+    let statusPill;
+    if (!item.valid)         statusPill = '<span class="pill pill-invalid">REVOGADA</span>';
+    else if (item.suspended) statusPill = '<span class="pill pill-suspended">SUSPENSA</span>';
+    else                     statusPill = '<span class="pill pill-valid">VÁLIDA</span>';
+
+    const hwidCell = item.hwid
+      ? `<span class="pill pill-used" title="${item.hwid}">VINCULADO</span>`
+      : '<span style="color:var(--text3);font-size:10px;font-family:var(--mono)">livre</span>';
+
+    const nameCell  = acc
+      ? `<span style="color:white;font-weight:bold">${acc.name || '—'}</span>`
+      : `<span style="color:var(--text3);font-family:var(--mono);font-size:10px">Sem conta</span>`;
+
+    const emailCell = acc
+      ? `<span style="color:var(--text2);font-size:11px">${acc.email}</span>`
+      : `<span style="color:var(--text3);font-size:10px">—</span>`;
+
+    // Badge: tem conta ou não
+    const accBadge = acc
+      ? `<span class="pill pill-active" style="font-size:9px">✓ CONTA</span>`
+      : `<span class="pill" style="background:rgba(60,20,30,.4);border:1px solid #2a0a10;color:var(--text3);font-size:9px">SEM CONTA</span>`;
+
+    const tr = timeRemaining(item.expiry);
+    const safeKey = item.key.replace(/'/g, "\\'");
+
+    const expiryCell = item.expiry && item.expiry !== 'Ilimitado'
+      ? `<div style="display:flex;flex-direction:column;gap:2px">
+           <span style="color:var(--text3);font-size:10px;font-family:var(--mono)">${new Date(item.expiry).toLocaleString('pt-BR')}</span>
+           ${tr ? `<span style="color:${tr.color};font-size:10px;font-weight:bold;font-family:var(--mono)">${tr.label}</span>` : ''}
+         </div>`
+      : `<span style="color:var(--green2);font-size:10px;font-family:var(--mono)">Ilimitado</span>`;
+
+    const renewMenu = item.valid && !item.suspended ? `
+      <div style="position:relative;display:inline-block" class="renew-wrap">
+        <button class="btn btn-sm" style="background:rgba(0,180,100,.15);border:1px solid rgba(0,180,100,.3);color:#00b464" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'">RENOVAR ▾</button>
+        <div style="display:none;position:absolute;z-index:99;background:#0f0404;border:1px solid #2a0a10;border-radius:8px;padding:6px;min-width:130px;top:110%;left:0;box-shadow:0 4px 20px rgba(0,0,0,.5)">
+          <div onclick="renewKey('${safeKey}',7)"  style="padding:6px 10px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text2);border-radius:4px" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background=''">+7 dias</div>
+          <div onclick="renewKey('${safeKey}',30)" style="padding:6px 10px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text2);border-radius:4px" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background=''">+30 dias</div>
+          <div onclick="renewKey('${safeKey}',0)"  style="padding:6px 10px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--green2);border-radius:4px" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background=''">Ilimitado</div>
+        </div>
+      </div>` : '';
+
+    const actions = `<div style="display:flex;gap:5px;flex-wrap:wrap">
+      ${item.hwid  ? `<button class="btn btn-gold btn-sm" onclick="resetHWIDFromUser('${safeKey}')">RESET HWID</button>` : ''}
+      ${renewMenu}
+      ${item.valid && !item.suspended ? `<button class="btn btn-sm btn-purple" onclick="quickRevoke('${safeKey}','reset-key')">RESET KEY</button>` : ''}
+      ${item.valid ? `<button class="btn btn-danger btn-sm" onclick="quickRevoke('${safeKey}','removed-key')">REMOVE KEY</button>` : ''}
+      <button class="copy-btn" onclick="copyText('${safeKey}')">COPIAR</button>
+    </div>`;
+
+    return `<tr style="border-bottom:1px solid #120305">
+      <td style="padding:10px 12px;width:36px">
+        <input type="checkbox" class="key-row-check" data-key="${item.key}" onchange="updateBulkBtn()" style="cursor:pointer;accent-color:var(--red2)"/>
+      </td>
+      <td style="padding:10px 12px;font-family:var(--mono);font-size:11px;color:${item.type === 'premium' ? 'var(--gold)' : 'var(--green2)'}">
+        <span title="${item.key}" style="cursor:help">${shortKey(item.key)}</span>
+      </td>
+      <td style="padding:10px 12px">${typePill}</td>
+      <td style="padding:10px 12px">${nameCell}</td>
+      <td style="padding:10px 12px">${emailCell}</td>
+      <td style="padding:10px 12px">${accBadge}</td>
+      <td style="padding:10px 12px">${statusPill}</td>
+      <td style="padding:10px 12px">${hwidCell}</td>
+      <td style="padding:10px 12px">${expiryCell}</td>
+      <td style="padding:10px 12px">${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function resetHWIDFromUser(keyStr) {
+  try {
+    const r    = await fetch(`${API}/reset-hwid?token=${adminApiKey}&key=${encodeURIComponent(keyStr)}`);
+    const data = await r.json();
+    if (data.success) {
+      showAlert('notifAlert', 'ok', 'HWID resetado! Usuário notificado.');
+      await loadAllKeys(); renderUsers();
+    } else showAlert('notifAlert', 'err', 'Erro: ' + (data.error || ''));
+  } catch (e) { showAlert('notifAlert', 'err', 'Erro de rede: ' + e.message); }
+}
+
+async function sendNotification() {
+  const email  = document.getElementById('notifEmail').value.trim();
+  const reason = document.getElementById('notifReason').value;
+  const msg    = document.getElementById('notifMsg').value.trim();
+  if (!email || !msg) { showAlert('notifAlert', 'err', 'Preencha email e mensagem.'); return; }
+  try {
+    // Tenta nas duas APIs (acc e register)
+    const r    = await fetch(`${API}/acc?action=notify&token=${adminApiKey}&email=${encodeURIComponent(email)}&msg=${encodeURIComponent(msg)}&reason=${reason}`);
+    const data = await r.json();
+    if (data.success) showAlert('notifAlert', 'ok', 'Notificação enviada para ' + email);
+    else {
+      // fallback para register legado
+      const r2    = await fetch(`${API}/register?action=notify&token=${adminApiKey}&email=${encodeURIComponent(email)}&msg=${encodeURIComponent(msg)}&reason=${reason}`);
+      const data2 = await r2.json();
+      if (data2.success) showAlert('notifAlert', 'ok', 'Notificação enviada para ' + email);
+      else showAlert('notifAlert', 'err', 'Erro: ' + (data2.error || 'Usuário não encontrado'));
+    }
+  } catch (e) { showAlert('notifAlert', 'err', 'Erro de rede: ' + e.message); }
+}
+
+// ── CONTAS (acc.js) ────────────────────────────────────
+async function loadAccounts() {
+  const tbody = document.getElementById('accTable');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="color:var(--text3);font-family:var(--mono);font-size:11px;text-align:center;padding:20px">Carregando...</td></tr>';
+  try {
+    const r    = await fetch(`${API}/acc?action=list&token=${adminApiKey}`);
+    const data = await r.json();
+    accounts = data.success ? (data.accounts || []) : [];
+    renderAccounts();
+  } catch (e) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red3);font-family:var(--mono);font-size:11px;text-align:center;padding:20px">Erro: ${e.message}</td></tr>`;
+  }
+}
+
+function renderAccounts() {
+  const tbody = document.getElementById('accTable');
+  if (!tbody) return;
+  const q = (document.getElementById('accFilter')?.value || '').toLowerCase();
+  let list = accounts.filter(a => {
+    if (!q) return true;
+    return (a.email || '').toLowerCase().includes(q)
+      || (a.name  || '').toLowerCase().includes(q)
+      || (a.key   || '').toLowerCase().includes(q);
+  });
+  const countEl = document.getElementById('accCount');
+  if (countEl) countEl.textContent = `// ${list.length} conta(s) registrada(s)`;
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="color:var(--text3);text-align:center;padding:20px">Nenhuma conta encontrada</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(a => {
+    const typePill = `<span class="pill ${a.keyType === 'premium' ? 'pill-premium' : 'pill-free'}">${(a.keyType || 'free').toUpperCase()}</span>`;
+    const statusPill = a.status === 'active'
+      ? '<span class="pill pill-valid">ATIVA</span>'
+      : '<span class="pill pill-invalid">SUSPENSA</span>';
+    const hwidCell = a.hwid
+      ? `<span class="hwid-tag" title="${a.hwid}">${a.hwid.substring(0,20)}…</span>`
+      : '<span style="color:var(--text3);font-size:10px">—</span>';
+    return `<tr>
+      <td style="color:var(--text2)">${a.email}</td>
+      <td style="color:white;font-weight:bold">${a.name || '—'}</td>
+      <td style="color:${a.keyType === 'premium' ? 'var(--gold)' : 'var(--green2)'}"><span title="${a.key}" style="cursor:help">${shortKey(a.key)}</span></td>
+      <td>${typePill}</td>
+      <td>${hwidCell}</td>
+      <td>${statusPill}</td>
+      <td style="color:var(--text3);font-size:10px">${a.registeredAt ? new Date(a.registeredAt).toLocaleString('pt-BR') : '—'}</td>
+      <td><div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="copy-btn" onclick="copyText('${a.email}')">EMAIL</button>
+        <button class="copy-btn" onclick="copyText('${a.key}')">KEY</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAccount('${a.email}')">DELETAR</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+async function deleteAccount(email) {
+  if (!confirm(`Deletar conta de ${email}?`)) return;
+  try {
+    const r    = await fetch(`${API}/acc?token=${adminApiKey}&email=${encodeURIComponent(email)}`, { method: 'DELETE' });
+    const data = await r.json();
+    if (data.success) { await loadAccounts(); }
+    else alert('Erro: ' + data.error);
+  } catch (e) { alert('Erro de rede: ' + e.message); }
+}
+
+// ── RENDER TABLES ──────────────────────────────────────
+function renderRecent() {
+  const tb    = document.getElementById('recentTable');
+  const slice = keys.slice(0, 8);
+  if (!slice.length) { tb.innerHTML = '<tr><td colspan="6" style="color:var(--text3);text-align:center;padding:20px">Nenhuma key ainda</td></tr>'; return; }
+  tb.innerHTML = slice.map(k => rowHtmlAllKeys(k, 6)).join('');
+}
+
+function renderAllKeys() {
+  const tb = document.getElementById('allKeysTable');
+  const q  = (document.getElementById('filterInput')?.value || '').toLowerCase();
+  const ft = document.getElementById('filterType')?.value || 'all';
+  const fs = document.getElementById('filterStatus')?.value || 'all';
+  let list = keys.filter(k => {
+    if (ft !== 'all' && k.type !== ft) return false;
+    if (fs === 'valid'     && (!k.valid || k.suspended)) return false;
+    if (fs === 'suspended' && (!k.suspended || !k.valid)) return false;
+    if (fs === 'revoked'   &&  k.valid) return false;
+    if (q && !k.key.toLowerCase().includes(q) && !(k.user || '').toLowerCase().includes(q) && !(k.email || '').toLowerCase().includes(q) && !(k.accountName || '').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="7" style="color:var(--text3);text-align:center;padding:20px">Nenhum resultado</td></tr>'; return; }
+  tb.innerHTML = list.map(k => rowHtmlAllKeys(k, 7)).join('');
+}
+
+function renderHWID() {
+  const tb   = document.getElementById('hwidTable');
+  const list = keys.filter(k => k.hwid);
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="5" style="color:var(--text3);text-align:center;padding:20px">Nenhum HWID vinculado ainda</td></tr>'; return; }
+  tb.innerHTML = list.map(k => {
+    const accountName = k.accountName || (k.email ? k.email.split('@')[0] : null);
+    const userLabel = accountName
+      ? `<span style="color:white;font-weight:600">${accountName}</span><br><span style="color:var(--text2);font-size:10px">${k.email || k.user || ''}</span>`
+      : `<span style="color:var(--text2)">${k.email || k.user || 'Anonymous'}</span>`;
+    return `
+    <tr>
+      <td style="color:${k.type === 'premium' ? 'var(--gold)' : 'var(--green2)'}">${shortKey(k.key)}</td>
+      <td><span class="pill ${k.type === 'premium' ? 'pill-premium' : 'pill-free'}">${k.type.toUpperCase()}</span></td>
+      <td>${userLabel}</td>
+      <td><span class="hwid-tag">${k.hwid}</span></td>
+      <td><button class="btn btn-gold btn-sm" onclick="resetHWIDDirect('${k.key}')">RESET HWID</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── KEYS REVOGADAS ─────────────────────────────────────
+function renderRevokedKeys() {
+  const tb = document.getElementById('revokedTable');
+  const q  = (document.getElementById('revokedFilter')?.value || '').toLowerCase();
+  let list = revokedKeys.filter(k => {
+    if (!q) return true;
+    return k.key.toLowerCase().includes(q) || (k.user || '').toLowerCase().includes(q) || (k.email || '').toLowerCase().includes(q);
+  });
+  const countEl = document.getElementById('revokedCount');
+  if (countEl) countEl.textContent = `// ${list.length} key(s) revogada(s)`;
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="5" style="color:var(--text3);text-align:center;padding:20px">Nenhuma key revogada</td></tr>';
+    return;
+  }
+  tb.innerHTML = list.map(k => {
+    const typePill = `<span class="pill ${k.type === 'premium' ? 'pill-premium' : 'pill-free'}">${k.type.toUpperCase()}</span>`;
+    const hwidCell = k.hwid ? `<span class="hwid-tag" title="${k.hwid}">${k.hwid.substring(0, 30)}...</span>` : '<span style="color:var(--text3);font-size:10px">—</span>';
+    const userLabel = k.accountName ? `<span style="color:white">${k.accountName}</span><br><span style="color:var(--text2);font-size:10px">${k.email || ''}</span>` : (k.email || k.user || 'Anonymous');
+    return `<tr>
+      <td style="font-family:var(--mono);color:var(--red3)"><span title="${k.key}" style="cursor:help">${shortKey(k.key)}</span></td>
+      <td>${typePill}</td>
+      <td style="color:var(--text2)">${userLabel}</td>
+      <td>${hwidCell}</td>
+      <td style="color:var(--text3)">${k.revokedAt || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── KEYS EXCLUÍDAS ─────────────────────────────────────
+function renderDeletedKeys() {
+  const tb = document.getElementById('deletedTable');
+  const q  = (document.getElementById('deletedFilter')?.value || '').toLowerCase();
+  let list = deletedKeys.filter(k => {
+    if (!q) return true;
+    return k.key.toLowerCase().includes(q) || (k.user || '').toLowerCase().includes(q) || (k.email || '').toLowerCase().includes(q);
+  });
+  const countEl = document.getElementById('deletedCount');
+  if (countEl) countEl.textContent = `// ${list.length} key(s) excluída(s)`;
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="5" style="color:var(--text3);text-align:center;padding:20px">Nenhuma key excluída</td></tr>';
+    return;
+  }
+  tb.innerHTML = list.map(k => {
+    const typePill = `<span class="pill ${k.type === 'premium' ? 'pill-premium' : 'pill-free'}">${k.type.toUpperCase()}</span>`;
+    const hwidCell = k.hwid ? `<span class="hwid-tag" title="${k.hwid}">${k.hwid.substring(0, 30)}...</span>` : '<span style="color:var(--text3);font-size:10px">—</span>';
+    const userLabel = k.accountName ? `<span style="color:white">${k.accountName}</span><br><span style="color:var(--text2);font-size:10px">${k.email || ''}</span>` : (k.email || k.user || 'Anonymous');
+    return `<tr>
+      <td style="font-family:var(--mono);color:var(--red3)"><span title="${k.key}" style="cursor:help">${shortKey(k.key)}</span></td>
+      <td>${typePill}</td>
+      <td style="color:var(--text2)">${userLabel}</td>
+      <td>${hwidCell}</td>
+      <td style="color:var(--text3)">${k.deletedAt || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function rowHtmlAllKeys(k, cols) {
+  const shortK     = shortKey(k.key);
+  const typePill   = `<span class="pill ${k.type === 'premium' ? 'pill-premium' : 'pill-free'}">${k.type.toUpperCase()}</span>`;
+  let statusPill;
+  if (!k.valid)        statusPill = '<span class="pill pill-invalid">REVOGADA</span>';
+  else if (k.suspended) statusPill = '<span class="pill pill-suspended">SUSPENSA</span>';
+  else                  statusPill = '<span class="pill pill-valid">VÁLIDA</span>';
+  const hwidCell = k.hwid ? '<span class="pill pill-used">VINCULADO</span>' : '<span style="color:var(--text3);font-size:10px;font-family:var(--mono)">livre</span>';
+  // Mostra nome da conta se vinculada, senão mostra usuário/email
+  const accountName = k.accountName || (k.email ? k.email.split('@')[0] : null);
+  const userLabel = accountName
+    ? `<span style="color:white;font-weight:600">${accountName}</span><br><span style="color:var(--text2);font-size:10px">${k.email || k.user || ''}</span>`
+    : `<span style="color:var(--text2)">${k.email || k.user || 'Anonymous'}</span>`;
+  if (cols === 6) return `<tr>
+    <td style="font-family:var(--mono);color:${k.type === 'premium' ? 'var(--gold)' : 'var(--green2)'}">${shortK}</td>
+    <td>${typePill}</td><td>${userLabel}</td>
+    <td>${statusPill}</td><td>${hwidCell}</td><td style="color:var(--text3)">${k.created}</td>
+  </tr>`;
+  return `<tr>
+    <td style="font-family:var(--mono);color:${k.type === 'premium' ? 'var(--gold)' : 'var(--green2)'}"><span title="${k.key}" style="cursor:help">${shortK}</span></td>
+    <td>${typePill}</td>
+    <td>${userLabel}</td>
+    <td style="color:var(--text3);font-size:10px">${k.expiry}</td>
+    <td>${hwidCell}</td>
+    <td>${statusPill}</td>
+    <td style="display:flex;gap:6px;flex-wrap:wrap;padding:6px 12px">
+      ${k.valid && !k.suspended ? `<button class="btn btn-sm btn-purple" onclick="quickRevoke('${k.key}','reset-key')">RESET KEY</button>` : ''}
+      ${k.valid ? `<button class="btn btn-danger btn-sm" onclick="quickRevoke('${k.key}','removed-key')">REMOVE KEY</button>` : ''}
+      ${k.hwid  ? `<button class="btn btn-gold btn-sm" onclick="resetHWIDDirect('${k.key}')">RESET HWID</button>` : ''}
+      <button class="copy-btn" onclick="copyText('${k.key}')">COPIAR</button>
+    </td>
+  </tr>`;
+}
+
+function rowHtml(k, cols) {
+  const shortK     = shortKey(k.key);
+  const typePill   = `<span class="pill ${k.type === 'premium' ? 'pill-premium' : 'pill-free'}">${k.type.toUpperCase()}</span>`;
+  let statusPill;
+  if (!k.valid)        statusPill = '<span class="pill pill-invalid">REVOGADA</span>';
+  else if (k.suspended) statusPill = '<span class="pill pill-suspended">SUSPENSA</span>';
+  else                  statusPill = '<span class="pill pill-valid">VÁLIDA</span>';
+  const hwidCell = k.hwid ? '<span class="pill pill-used">VINCULADO</span>' : '<span style="color:var(--text3);font-size:10px;font-family:var(--mono)">livre</span>';
+  const userLabel = k.email ? `${k.email}` : (k.user || 'Anonymous');
+  if (cols === 6) return `<tr>
+    <td style="font-family:var(--mono);color:${k.type === 'premium' ? 'var(--gold)' : 'var(--green2)'}">${shortK}</td>
+    <td>${typePill}</td><td style="color:var(--text2)">${userLabel}</td>
+    <td>${statusPill}</td><td>${hwidCell}</td><td style="color:var(--text3)">${k.created}</td>
+  </tr>`;
+  return `<tr>
+    <td style="font-family:var(--mono);color:${k.type === 'premium' ? 'var(--gold)' : 'var(--green2)'}"><span title="${k.key}" style="cursor:help">${shortK}</span></td>
+    <td>${typePill}</td>
+    <td style="color:var(--text2)">${userLabel}</td>
+    <td style="color:var(--text3);font-size:10px">${k.expiry}</td>
+    <td>${hwidCell}</td>
+    <td>${statusPill}</td>
+    <td style="display:flex;gap:6px;flex-wrap:wrap;padding:6px 12px">
+      ${k.valid && !k.suspended ? `<button class="btn btn-sm btn-purple" onclick="quickRevoke('${k.key}','reset-key')">RESET KEY</button>` : ''}
+      ${k.valid ? `<button class="btn btn-danger btn-sm" onclick="quickRevoke('${k.key}','removed-key')">REMOVE KEY</button>` : ''}
+      ${k.hwid  ? `<button class="btn btn-gold btn-sm" onclick="resetHWIDDirect('${k.key}')">RESET HWID</button>` : ''}
+      <button class="copy-btn" onclick="copyText('${k.key}')">COPIAR</button>
+    </td>
+  </tr>`;
+}
+
+// ── STATS ──────────────────────────────────────────────
+async function loadAllKeys() {
+  try {
+    // Carrega keys + accounts em paralelo para enriquecer nomes
+    const [rKeys, rAcc] = await Promise.allSettled([
+      fetch(`${API}/list?token=${adminApiKey}`).then(r => r.json()),
+      fetch(`${API}/acc?action=list&token=${adminApiKey}`).then(r => r.json())
+    ]);
+
+    const data = (rKeys.status === 'fulfilled') ? rKeys.value : null;
+    if (rAcc.status === 'fulfilled' && rAcc.value.success) {
+      accounts = rAcc.value.accounts || [];
+    }
+
+    if (data && data.success) {
+      const allKeys = data.keys.map(k => {
+        // Procura conta vinculada por key (acc.js tem prioridade)
+        const acc = accounts.find(a => a.key === k.key);
+        const accountName = acc ? (acc.name || acc.email)
+                                : (k.accountName || (k.hasAccount ? k.user : null));
+        const accountEmail = acc ? acc.email : (k.email || null);
+
+        return {
+          key:         k.key,
+          type:        k.type || 'free',
+          user:        k.user || 'Anonymous',
+          email:       accountEmail,
+          accountName: accountName,
+          expiry:      k.expiry ? new Date(k.expiry).toLocaleString('pt-BR') : 'Ilimitado',
+          valid:       k.active !== false,
+          suspended:   k.suspended || false,
+          hwid:        k.hwid || null,
+          created:     k.created ? new Date(k.created).toLocaleString('pt-BR') : '-',
+          revokedAt:   k.revokedAt ? new Date(k.revokedAt).toLocaleString('pt-BR') : null,
+          deletedAt:   k.deletedAt ? new Date(k.deletedAt).toLocaleString('pt-BR') : null,
+          deletedVia:  k.deletedVia || null
+        };
+      });
+
+      // Separa baseado em deletedVia (campo persistido no servidor)
+      // - bulk-delete  → tab "Keys Excluídas"
+      // - revoke (ou keys antigas sem deletedVia) → tab "Keys Revogadas"
+      // - resto (active=true ou suspensa) → tab "Todas as Keys"
+      keys        = allKeys.filter(k => k.valid);
+      revokedKeys = allKeys.filter(k => !k.valid && k.deletedVia !== 'bulk-delete');
+      deletedKeys = allKeys.filter(k => !k.valid && k.deletedVia === 'bulk-delete');
+    }
+  } catch (e) { console.error('loadAllKeys error:', e); }
+}
+
+function updateStats() {
+  // keys = válidas (e suspensas), revokedKeys = revogadas, deletedKeys = excluídas
+  const totalGenerated = keys.length + revokedKeys.length + deletedKeys.length;
+  document.getElementById('s-total').textContent   = totalGenerated;
+  document.getElementById('s-valid').textContent   = keys.filter(k => k.valid && !k.suspended).length;
+  document.getElementById('s-premium').textContent = keys.filter(k => k.type === 'premium').length;
+  document.getElementById('s-free').textContent    = keys.filter(k => k.type === 'free').length;
+  document.getElementById('s-revoked').textContent = revokedKeys.length + deletedKeys.length;
+  document.getElementById('s-hwid').textContent    = keys.filter(k => k.hwid).length;
+  renderRecent();
+}
+
+// ── UTILS ──────────────────────────────────────────────
+function showAlert(id, type, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = '// ' + msg;
+  el.className = `alert alert-${type === 'ok' ? 'ok' : type === 'err' ? 'err' : 'info'} show`;
+  setTimeout(() => el.classList.remove('show'), 4500);
+}
+
+function copyText(txt) {
+  navigator.clipboard.writeText(txt).catch(() => {});
+  const ev = window.event;
+  if (ev && ev.target) { const o = ev.target.textContent; ev.target.textContent = '✓'; setTimeout(() => ev.target.textContent = o, 1000); }
+}
+
+function shortKey(k) { return k && k.length > 22 ? k.substring(0, 22) + '…' : (k || '—'); }
+</script>
+</body>
+</html>
