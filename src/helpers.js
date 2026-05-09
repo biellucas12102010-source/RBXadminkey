@@ -44,11 +44,8 @@ function maskEmail(email) {
 
 // ── Envio de e-mail de redefinição ────────────────────────────────────────────
 async function sendResetEmail(name, toEmail, code) {
-  const resendKey  = process.env.RESEND_API_KEY  || '';
-  const mailgunKey = process.env.MAILGUN_API_KEY || '';
-  const mailgunDom = process.env.MAILGUN_DOMAIN  || '';
-  const fromEmail  = process.env.RESET_FROM_EMAIL || 'noreply@rbxexploit.com';
-  const appName    = process.env.APP_NAME         || 'RBXexploit';
+  const appName   = process.env.APP_NAME          || 'RBXexploit';
+  const fromEmail = process.env.RESET_FROM_EMAIL  || process.env.GMAIL_USER || 'noreply@rbxexploit.com';
 
   const subject = `${appName} — Código de redefinição de senha`;
   const html = `
@@ -64,7 +61,30 @@ async function sendResetEmail(name, toEmail, code) {
     </div>`;
   const text = `${appName} — Código de redefinição: ${code}\n\nExpira em 15 minutos.\nSe não solicitou, ignore.`;
 
-  // Resend
+  // ── Gmail via Nodemailer (principal) ─────────────────────────────────────
+  const gmailUser = process.env.GMAIL_USER || '';
+  const gmailPass = process.env.GMAIL_APP_PASSWORD || '';
+  if (gmailUser && gmailPass) {
+    try {
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: gmailUser, pass: gmailPass },
+      });
+      await transporter.sendMail({
+        from: `"${appName}" <${gmailUser}>`,
+        to: toEmail,
+        subject,
+        html,
+        text,
+      });
+      console.log(`[sendResetEmail] Gmail OK → ${toEmail}`);
+      return true;
+    } catch (e) { console.error('[sendResetEmail] Gmail erro:', e.message); }
+  }
+
+  // ── Resend (fallback) ─────────────────────────────────────────────────────
+  const resendKey = process.env.RESEND_API_KEY || '';
   if (resendKey) {
     try {
       const r = await fetch('https://api.resend.com/emails', {
@@ -77,7 +97,9 @@ async function sendResetEmail(name, toEmail, code) {
     } catch (e) { console.error('[sendResetEmail] Resend exception:', e.message); }
   }
 
-  // Mailgun
+  // ── Mailgun (fallback) ────────────────────────────────────────────────────
+  const mailgunKey = process.env.MAILGUN_API_KEY || '';
+  const mailgunDom = process.env.MAILGUN_DOMAIN  || '';
   if (mailgunKey && mailgunDom) {
     try {
       const form = new URLSearchParams({ from: fromEmail, to: toEmail, subject, html, text });
