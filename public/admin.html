@@ -630,26 +630,39 @@ let adminApiKey = ADMIN_API_TOKEN;
 const API = window.location.origin + '/api';
 
 // ── LOGIN ──────────────────────────────────────────────
+function enterApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('adminKeyShow').textContent = adminApiKey;
+  loadAllKeys().then(() => { updateStats(); renderRecent(); });
+}
+
 function doLogin() {
   const e = document.getElementById('loginEmail').value.trim();
   const p = document.getElementById('loginPass').value;
   const err = document.getElementById('loginErr');
   if (e === ADMIN_EMAIL && p === ADMIN_PASS) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('adminKeyShow').textContent = adminApiKey;
-    loadAllKeys().then(() => { updateStats(); renderRecent(); });
+    localStorage.setItem('rbx_admin_session', '1');
+    enterApp();
   } else {
     err.textContent = '// CREDENCIAIS INVÁLIDAS';
     setTimeout(() => err.textContent = '', 2500);
   }
 }
+
 function doLogout() {
+  localStorage.removeItem('rbx_admin_session');
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPass').value  = '';
 }
+
+// Restaura sessão automaticamente se já logou antes
+if (localStorage.getItem('rbx_admin_session') === '1') {
+  enterApp();
+}
+
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 // ── TABS ───────────────────────────────────────────────
