@@ -61,26 +61,31 @@ async function sendResetEmail(name, toEmail, code) {
     </div>`;
   const text = `${appName} — Código de redefinição: ${code}\n\nExpira em 15 minutos.\nSe não solicitou, ignore.`;
 
-  // ── Gmail via Nodemailer (principal) ─────────────────────────────────────
-  const gmailUser = process.env.GMAIL_USER || '';
-  const gmailPass = process.env.GMAIL_APP_PASSWORD || '';
-  if (gmailUser && gmailPass) {
+  // ── Brevo (principal — usa HTTPS, funciona no Render) ───────────────────
+  const brevoKey = process.env.BREVO_API_KEY || '';
+  if (brevoKey) {
     try {
-      const nodemailer = require('nodemailer');
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user: gmailUser, pass: gmailPass },
+      const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': brevoKey,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { name: appName, email: fromEmail },
+          to: [{ email: toEmail }],
+          subject,
+          htmlContent: html,
+          textContent: text
+        })
       });
-      await transporter.sendMail({
-        from: `"${appName}" <${gmailUser}>`,
-        to: toEmail,
-        subject,
-        html,
-        text,
-      });
-      console.log(`[sendResetEmail] Gmail OK → ${toEmail}`);
-      return true;
-    } catch (e) { console.error('[sendResetEmail] Gmail erro:', e.message); }
+      if (r.ok) {
+        console.log(`[sendResetEmail] Brevo OK → ${toEmail}`);
+        return true;
+      }
+      console.error('[sendResetEmail] Brevo error:', await r.text());
+    } catch (e) { console.error('[sendResetEmail] Brevo exception:', e.message); }
   }
 
   // ── Resend (fallback) ─────────────────────────────────────────────────────
@@ -95,25 +100,6 @@ async function sendResetEmail(name, toEmail, code) {
       if (r.ok) return true;
       console.error('[sendResetEmail] Resend error:', await r.text());
     } catch (e) { console.error('[sendResetEmail] Resend exception:', e.message); }
-  }
-
-  // ── Mailgun (fallback) ────────────────────────────────────────────────────
-  const mailgunKey = process.env.MAILGUN_API_KEY || '';
-  const mailgunDom = process.env.MAILGUN_DOMAIN  || '';
-  if (mailgunKey && mailgunDom) {
-    try {
-      const form = new URLSearchParams({ from: fromEmail, to: toEmail, subject, html, text });
-      const r = await fetch(`https://api.mailgun.net/v3/${mailgunDom}/messages`, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Basic ' + Buffer.from('api:' + mailgunKey).toString('base64'),
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: form.toString()
-      });
-      if (r.ok) return true;
-      console.error('[sendResetEmail] Mailgun error:', await r.text());
-    } catch (e) { console.error('[sendResetEmail] Mailgun exception:', e.message); }
   }
 
   // Dev mode — loga o código no console
