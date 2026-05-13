@@ -222,34 +222,6 @@ router.get('/', async (req, res) => {
     } catch (e) { return res.json({ error: 'SERVER_ERROR', detail: e.message }); }
   }
 
-  // ── search (público) ─────────────────────────────────────────────────────
-  if (action === 'search') {
-    const q = (p.q || '').toLowerCase().trim();
-    if (!q || q.length < 2) return res.json({ error: 'QUERY_TOO_SHORT' });
-
-    try {
-      const results = await Account.find({
-        $or: [
-          { email: { $regex: q, $options: 'i' } },
-          { name:  { $regex: q, $options: 'i' } }
-        ]
-      }, { email: 1, name: 1, keyType: 1 }).limit(25).lean();
-
-      return res.json({ success: true, count: results.length, results });
-    } catch (e) { return res.json({ error: 'SERVER_ERROR', detail: e.message }); }
-  }
-
-  // ── lookup (público — busca por email exato) ─────────────────────────────
-  if (action === 'lookup') {
-    const email = (p.email || '').toLowerCase().trim();
-    if (!email) return res.json({ error: 'EMAIL_REQUIRED' });
-    try {
-      const acc = await Account.findOne({ email }, { email: 1, name: 1, keyType: 1 }).lean();
-      if (!acc) return res.status(404).json({ error: 'ACCOUNT_NOT_FOUND' });
-      return res.json({ success: true, email: acc.email, name: acc.name, keyType: acc.keyType });
-    } catch (e) { return res.json({ error: 'SERVER_ERROR', detail: e.message }); }
-  }
-
   // ── list (admin) ─────────────────────────────────────────────────────────
   if (action === 'list') {
     if (token !== ADMIN_TOKEN()) return res.json({ error: 'UNAUTHORIZED' });
